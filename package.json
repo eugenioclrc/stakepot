@@ -1,0 +1,20 @@
+{
+  "name": "stakepod",
+  "description": "A decentralized no loss staking lottery",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["frontend"],
+  "packageManager": "npm@11.2.0",
+  "scripts": {
+     "dev": "turbo run dev",
+  "build": "turbo run build",
+  "test": "turbo run test"
+  },
+  "keywords": [],
+  "author": "eugenioclrc",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "turbo": "^2.5.4"
+  }
+}
