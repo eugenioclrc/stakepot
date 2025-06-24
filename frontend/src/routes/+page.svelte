@@ -12,7 +12,8 @@
       </ul>
     </div>
     <div class="navbar-end">
-      <button class="btn btn-primary btn-sm">Connect Wallet</button>
+      <!-- <button class="btn btn-primary btn-sm">Connect Wallet</button> -->
+       <w3m-button></w3m-button>
     </div>
   </div>
   
