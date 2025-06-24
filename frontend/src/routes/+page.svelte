@@ -1,25 +1,6 @@
 
-<div class="navbar bg-base-100 shadow-md">
-    <div class="navbar-start">
-      <a class="btn btn-ghost text-xl text-primary">StakePot</a>
-    </div>
-    <div class="navbar-center hidden lg:flex">
-      <ul class="menu menu-horizontal px-1 text-base">
-        <li><a>How it Works</a></li>
-        <li><a>Prizes</a></li>
-        <li><a>Leaderboard</a></li>
-        <li><a>About</a></li>
-      </ul>
-    </div>
-    <div class="navbar-end">
-      <!-- <button class="btn btn-primary btn-sm">Connect Wallet</button> -->
-       <w3m-button></w3m-button>
-    </div>
-  </div>
-  
-
-
-<div class="hero min-h-screen bg-base-200">
+<div class="from-gray-800 to-black text-primary-content -mt-[4rem] grid place-items-center items-end bg-gradient-to-br pt-20">
+  <div class="hero min-h-screen">
     <div class="hero-content flex-col lg:flex-row-reverse">
       <img src="/logo.jpg" class="max-w-sm rounded-lg shadow-2xl" alt="Winning illustration"/>
       <div>
@@ -30,7 +11,7 @@
           Your funds stay safe — no lockups, no losses.
         </p>
         <div class="flex flex-wrap gap-4">
-          <a class="btn btn-primary btn-lg">Start Staking</a>
+          <a class="btn btn-primary btn-lg" href="/stake">Start Staking</a>
           <a class="btn btn-outline btn-secondary">How it Works</a>
         </div>
         <div class="mt-4 stats shadow stats-vertical sm:stats-horizontal">
@@ -50,4 +31,4 @@
       </div>
     </div>
   </div>
-  
+</div>

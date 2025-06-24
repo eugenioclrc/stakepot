@@ -1,20 +1,4 @@
 
-<div class="navbar bg-base-100 shadow-md">
-    <div class="navbar-start">
-      <a class="btn btn-ghost text-xl text-primary">StakePot</a>
-    </div>
-    <div class="navbar-center hidden lg:flex">
-      <ul class="menu menu-horizontal px-1 text-base">
-        <li><a>How it Works</a></li>
-        <li><a>Prizes</a></li>
-        <li><a>Leaderboard</a></li>
-        <li><a>About</a></li>
-      </ul>
-    </div>
-    <div class="navbar-end">
-      <button class="btn btn-primary btn-sm">Connect Wallet</button>
-    </div>
-  </div>
   <div class="min-h-screen bg-base-200 px-4 py-10 flex flex-col lg:flex-row gap-8 items-center justify-center">
 
     <!-- CARD 1: Stake Form -->
