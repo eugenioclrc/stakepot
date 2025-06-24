@@ -21,7 +21,7 @@
 
 <div class="hero min-h-screen bg-base-200">
     <div class="hero-content flex-col lg:flex-row-reverse">
-      <img src="https://picsum.photos/500/400" class="max-w-sm rounded-lg shadow-2xl" alt="Winning illustration"/>
+      <img src="/logo.jpg" class="max-w-sm rounded-lg shadow-2xl" alt="Winning illustration"/>
       <div>
         <h1 class="text-5xl font-bold text-primary">Stake, Earn, Win. No Risk.</h1>
         <p class="py-6 text-base-content">
