@@ -7,7 +7,7 @@
         <h1 class="text-5xl font-bold text-primary">Stake, Earn, Win. No Risk.</h1>
         <p class="py-6 text-base-content">
           Welcome to <strong>StakePot</strong> — a revolutionary no-loss staking lottery.
-          Stake your crypto, earn yield, and get a chance to win huge USDT prizes in our weekly raffles.
+          Stake your crypto, earn yield, and get a chance to win huge sAVAX prizes in our weekly raffles.
           Your funds stay safe — no lockups, no losses.
         </p>
         <div class="flex flex-wrap gap-4">
@@ -25,7 +25,7 @@
           </div>
           <div class="stat">
             <div class="stat-title">Next Draw</div>
-            <div class="stat-value text-accent">Friday 20:00 UTC</div>
+            <div class="stat-value text-accent">20:00 UTC</div>
           </div>
         </div>
       </div>
