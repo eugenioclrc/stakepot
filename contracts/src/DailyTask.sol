@@ -9,7 +9,7 @@ interface IRaffle {
 }
 
 contract DailyTask is AutomationCompatibleInterface, Ownable {
-    IRaffle immutable public RAFFLE;
+    IRaffle public immutable RAFFLE;
     uint256 public lastTimeStamp;
     uint256 public interval = 1 days;
 
@@ -34,7 +34,7 @@ contract DailyTask is AutomationCompatibleInterface, Ownable {
         if ((block.timestamp - lastTimeStamp) > interval) {
             lastTimeStamp = block.timestamp;
             // TODO call raffle
-            raffle.startRaffle();
+            RAFFLE.startRaffle();
         }
     }
 

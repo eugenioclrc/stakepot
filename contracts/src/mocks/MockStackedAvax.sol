@@ -6,11 +6,17 @@ import {ERC20} from "solady/src/tokens/ERC20.sol";
 
 contract MockStackedAvax is ERC20 {
     uint256 private _totalAvax;
-    uint256 public constant DEPLOYED_AT = block.timestamp;
+    uint256 public immutable DEPLOYED_AT;
 
     mapping(address => bool) private _airdrop;
+
     event Airdrop(address indexed to, uint256 amount);
 
+    constructor() {
+        DEPLOYED_AT = block.timestamp;
+        _mint(msg.sender, 10 ether);
+        _totalAvax = 10 ether;
+    }
 
     // Override con especificación explícita para evitar ambigüedad
     function name() public pure override returns (string memory) {
@@ -28,7 +34,7 @@ contract MockStackedAvax is ERC20 {
     function totalAvax() public view returns (uint256) {
         // dummy calculation to simulate total AVAX staked increase
         uint256 onePercentDaily = (block.timestamp - DEPLOYED_AT) * _totalAvax / 100 / 1 days;
-        
+
         return _totalAvax + onePercentDaily;
     }
 
@@ -41,15 +47,15 @@ contract MockStackedAvax is ERC20 {
         emit Airdrop(to, amount);
     }
 
-    function getPooledAvaxByShares(uint256 shareAmount) external view  returns (uint256) {
+    function getPooledAvaxByShares(uint256 shareAmount) external view returns (uint256) {
         return totalAvax() * shareAmount / totalSupply();
     }
 
-    function getSharesByPooledAvax(uint256 avaxAmount) external view  returns (uint256) {
+    function getSharesByPooledAvax(uint256 avaxAmount) external view returns (uint256) {
         return totalSupply() * avaxAmount / totalAvax();
     }
 
-    function submit() external payable  returns (uint256) {
+    function submit() external payable returns (uint256) {
         _mint(msg.sender, msg.value);
         return msg.value;
     }
