@@ -1,0 +1,105 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.20;
+
+import "forge-std/Test.sol";
+import {IRaffle, DailyTask } from "src/DailyTask.sol";
+
+contract MockRaffle is IRaffle {
+    bool public wasCalled;
+
+    function startRaffle() external override {
+        wasCalled = true;
+    }
+}
+
+contract DailyTaskTest is Test {
+    error Unauthorized();
+
+    DailyTask public task;
+    MockRaffle public raffle;
+    address public owner = address(this);
+    address public stranger = address(0xBEEF);
+
+    function setUp() public {
+        raffle = new MockRaffle();
+        task = new DailyTask(address(raffle));
+    }
+
+    function testInitialState() public {
+        assertEq(task.paused(), false);
+        assertEq(task.interval(), 1 days);
+        assertEq(address(task.RAFFLE()), address(raffle));
+    }
+
+    function testCheckUpkeepNotNeededInitially() public {
+        (bool upkeepNeeded,) = task.checkUpkeep("");
+        assertFalse(upkeepNeeded);
+    }
+
+    function testCheckUpkeepNeededAfterInterval() public {
+        vm.warp(block.timestamp + 1 days + 1);
+        (bool upkeepNeeded,) = task.checkUpkeep("");
+        assertTrue(upkeepNeeded);
+    }
+
+    function testPerformUpkeepCallsRaffleWhenNotPaused() public {
+        vm.warp(block.timestamp + 1 days + 1);
+        task.performUpkeep("");
+        assertTrue(raffle.wasCalled());
+        assertEq(task.lastTimeStamp(), block.timestamp);
+    }
+
+    function testPerformUpkeepRevertsWhenPaused() public {
+        task.pause();
+        vm.warp(block.timestamp + 2 days);
+
+        vm.expectRevert("PAUSED");
+        task.performUpkeep("");
+    }
+
+    function testPauseAndUnpause() public {
+        assertEq(task.paused(), false);
+        task.pause();
+        assertEq(task.paused(), true);
+        task.unpause();
+        assertEq(task.paused(), false);
+    }
+
+
+    function testOnlyOwnerCanPauseUnpauseAndSetInterval() public {
+        vm.prank(stranger);
+        vm.expectRevert(Unauthorized.selector);
+        task.pause();
+
+        vm.prank(stranger);
+        vm.expectRevert(Unauthorized.selector);
+        task.unpause();
+
+        vm.prank(stranger);
+        vm.expectRevert(Unauthorized.selector);
+        task.setInterval(2 days);
+    }
+
+    function testSetInterval() public {
+        task.setInterval(2 days);
+        assertEq(task.interval(), 2 days);
+    }
+
+    function testPerformUpkeepBeforeIntervalDoesNothing() public {
+        task.performUpkeep("");
+        assertFalse(raffle.wasCalled());
+    }
+
+    function testMultipleUpkeeps() public {
+        vm.warp(block.timestamp + 2 days);
+        task.performUpkeep("");
+        assertTrue(raffle.wasCalled());
+
+        // Reset
+        raffle = new MockRaffle();
+        vm.warp(block.timestamp + 1 days);
+        task.performUpkeep(""); // Debe volver a llamarse porque pasó otro día
+        // Pero como usamos otro MockRaffle, el flag `wasCalled` está en el contrato anterior
+        // Este caso ilustra que se puede repetir upkeep si pasa suficiente tiempo
+    }
+}
