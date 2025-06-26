@@ -30,17 +30,43 @@ contract RaffleTest is Test {
     DailyTask dailyTask;
     MockVRFCoordinator coordinator;
 
+    address alice = makeAddr("alice");
+    address bob = makeAddr("bob");
+
     function setUp() public {
         coordinator = new MockVRFCoordinator();
         mockSAVAX = new MockStakedAvax();
         vault = new Vault(address(mockSAVAX));
         dailyTask = new DailyTask(address(this));
-        uint256 ticketPrice = 1 ether;
+        uint256 ticketPrice = 1 ether; // one avax per ticket
         raffle =
             new Raffle(ticketPrice, address(dailyTask), address(randomProvider), address(vault), address(mockSAVAX));
         randomProvider = new MockRandomProvider(address(coordinator), bytes32(0), 1, address(raffle));
 
         raffle.setRandomProvider(address(randomProvider));
         dailyTask.setRaffle(address(raffle));
+        vault.setRaffle(address(raffle));
+
+        deal(alice, 10 ether);
+        deal(bob, 10 ether);
     }
+
+    function testRaffle() public {
+        vm.prank(alice);
+        raffle.buyTickets{value: 4 ether}();
+
+        vm.prank(bob);
+        raffle.buyTickets{value: 4 ether}();
+
+        vm.prank(alice);
+        raffle.buyTickets{value: 1 ether}();
+
+        vm.prank(bob);
+        raffle.buyTickets{value: 1 ether}();
+
+        assertEq(raffle.pricePool(), 0 ether);
+        assertEq(mockSAVAX.balanceOf(address(raffle.VAULT())), 10 ether);
+        assertEq(mockSAVAX._totalAvax(), 10 ether);
+    }
+        
 }

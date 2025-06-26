@@ -17,6 +17,7 @@ contract Vault is Ownable {
     function deposit() external payable {
         require(msg.sender == raffle, "ONLY_RAFFLE");
         require(msg.value > 0, "NO_ZERO_AMOUNT");
+        totalBalance += msg.value;
 
         // Deposit AVAX into sAVAX
         sAVAX.submit{value: msg.value}();

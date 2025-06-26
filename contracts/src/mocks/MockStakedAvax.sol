@@ -5,7 +5,7 @@ import {ERC20} from "solady/src/tokens/ERC20.sol";
 //import {IStakedAvax} from "../interfaces/IStakedAvax.sol";
 
 contract MockStakedAvax is ERC20 {
-    uint256 private _totalAvax;
+    uint256 public _totalAvax;
     uint256 public immutable DEPLOYED_AT;
 
     mapping(address => bool) private _airdrop;
