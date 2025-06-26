@@ -21,7 +21,7 @@ contract Vault is Ownable {
         // Deposit AVAX into sAVAX
         sAVAX.submit{value: msg.value}();
     }
-    
+
     function depositSAVAX(uint256 amount) external {
         require(msg.sender == raffle, "ONLY_RAFFLE");
         require(amount > 0, "NO_ZERO_AMOUNT");
@@ -42,7 +42,7 @@ contract Vault is Ownable {
     function withdrawToWinner(address winner) external {
         require(msg.sender == raffle, "ONLY_RAFFLE");
         uint256 amount = totalPrice();
-        if(amount == 0) return;
+        if (amount == 0) return;
         uint256 sAVAXamount = sAVAX.getSharesByPooledAvax(amount);
         sAVAX.transfer(winner, sAVAXamount);
     }
@@ -59,14 +59,14 @@ contract Vault is Ownable {
         require(_raffle != address(0), "NO_ZERO_ADDRESS");
         raffle = _raffle;
     }
-    
-    // @warning: this function is used to withdraw stuck tokens from the vault, its a centralization 
+
+    // @warning: this function is used to withdraw stuck tokens from the vault, its a centralization
     // risk, good for now but probably should be removed in the future
     function withdrawStuck(address _token, uint256 amount) external onlyOwner {
         require(_token != address(0), "NO_ZERO_ADDRESS");
         require(amount > 0, "NO_ZERO_AMOUNT");
 
-        (bool success, ) = _token.call(abi.encodeWithSignature("transfer(address,uint256)", msg.sender, amount));
+        (bool success,) = _token.call(abi.encodeWithSignature("transfer(address,uint256)", msg.sender, amount));
         require(success, "TRANSFER_FAILED");
     }
 }

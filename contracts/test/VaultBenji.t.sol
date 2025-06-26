@@ -80,7 +80,7 @@ contract VaultTest is Test {
         vm.prank(raffle);
         vault.withdrawToWinner(winner);
         // earns from aprox yield
-        assertApproxEqAbs(mockSAVAX.balanceOf(winner), 1 ether, 0.1 ether); 
+        assertApproxEqAbs(mockSAVAX.balanceOf(winner), 1 ether, 0.1 ether);
     }
 
     function testWithdrawToWinnerNoTransferIfNoGain() public {
@@ -99,7 +99,7 @@ contract VaultTest is Test {
         deal(address(mockSAVAX), address(raffle), 10 ether);
         vm.prank(raffle);
         vault.depositSAVAX(10 ether);
-    
+
         vm.warp(block.timestamp + 10 days);
 
         uint256 price = vault.totalPrice();
@@ -133,5 +133,4 @@ contract VaultTest is Test {
         vm.expectRevert("NO_ZERO_AMOUNT");
         vault.withdrawStuck(address(mockSAVAX), 0);
     }
-
 }

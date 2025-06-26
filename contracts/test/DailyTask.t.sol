@@ -2,19 +2,20 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import {IRaffle, DailyTask} from "src/DailyTask.sol";
+import {DailyTask} from "src/DailyTask.sol";
+import {Raffle} from "src/Raffle.sol";
 
-contract MockRaffle is IRaffle {
+contract MockRaffle {
     bool public wasCalled;
 
     // starts with a price pool
     uint256 _pricePool = 10;
 
-    function startRaffle() external override {
+    function startRaffle() external {
         wasCalled = true;
     }
 
-    function pricePool() external view returns(uint256) {
+    function pricePool() external view returns (uint256) {
         return _pricePool;
     }
 
@@ -63,8 +64,6 @@ contract DailyTaskTest is Test {
         raffle.setPricePool(0);
         (upkeepNeeded,) = task.checkUpkeep("");
         assertFalse(upkeepNeeded);
-        
-
     }
 
     function testPerformUpkeepCallsRaffleWhenNotPaused() public {

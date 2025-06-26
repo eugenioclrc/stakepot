@@ -14,7 +14,7 @@ contract RandomProvider is VRFConsumerBaseV2, Ownable {
     uint32 public callbackGasLimit = 100_000;
     uint16 public requestConfirmations = 3;
     uint32 public numWords = 1;
-    
+
     mapping(uint256 raffleId => bytes32 random) public randomValue;
 
     uint256 public lastRequestId;

@@ -7,6 +7,7 @@ import "src/mocks/MockVRFCoordinator.sol";
 
 contract MockRaffle {
     uint256 public raffleCounterId;
+
     function callRequest(RandomProvider requester) external {
         requester.requestRandomNumber();
         raffleCounterId++;
@@ -98,7 +99,7 @@ contract RandomProviderTest is Test {
         requester.setRaffle(address(0xDEAD));
 
         vm.prank(notOwner);
-         vm.expectRevert(Unauthorized.selector);
+        vm.expectRevert(Unauthorized.selector);
         requester.setCallbackGasLimit(9999);
     }
 }

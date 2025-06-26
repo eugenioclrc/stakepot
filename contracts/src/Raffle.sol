@@ -13,13 +13,12 @@ contract Raffle is Ownable {
         uint120 validAfter;
         bool burned;
         address owner;
-    }// Packet in 2 slots
+    } // Packet in 2 slots
 
     uint8 internal constant RAFFLE_NOT_STARTED = 1;
     uint8 internal constant RAFFLE_STARTED = 2;
     uint256 public immutable TICKET_PRICE;
     Vault public immutable VAULT;
-
 
     uint256 public ticketCounterId;
 
@@ -34,7 +33,6 @@ contract Raffle is Ownable {
     address public keeper;
     RandomProvider public randomProvider;
     uint8 private _raffleState = 1; // 1: open, 2: closed
-
 
     constructor(uint256 _ticketPrice, address _keeper, address _randomProvider, address _vault, address _SAVAX) {
         TICKET_PRICE = _ticketPrice;
@@ -68,7 +66,6 @@ contract Raffle is Ownable {
         }
         ticketCounterId += _tickets;
     }
-
 
     function withdraw(uint256[] memory ticketsId) external {
         require(ticketsId.length > 0, "No tickets to withdraw");
@@ -125,7 +122,9 @@ contract Raffle is Ownable {
         VAULT.withdrawToWinner(foundWinner);
     }
 
-    
+    function pricePool() external view virtual returns (uint256) {
+        return VAULT.totalPrice();
+    }
 
     function setKeeper(address _keeper) external onlyOwner {
         keeper = _keeper;
