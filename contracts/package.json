@@ -12,6 +12,7 @@
   },
   "scripts": {
     "test": "forge test",
+    "coverage": "forge coverage  --no-match-coverage \"test|mocks|script\"",
     "build": "forge build"
   },
   "dependencies": {
