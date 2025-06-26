@@ -6,6 +6,7 @@ import {Ownable} from "solady/src/auth/Ownable.sol";
 
 interface IRaffle {
     function startRaffle() external;
+    function pricePool() external view returns(uint256);
 }
 
 contract DailyTask is AutomationCompatibleInterface, Ownable {
@@ -26,16 +27,27 @@ contract DailyTask is AutomationCompatibleInterface, Ownable {
     }
 
     function checkUpkeep(bytes calldata) external view override returns (bool upkeepNeeded, bytes memory) {
-        upkeepNeeded = (block.timestamp - lastTimeStamp) > interval;
+        upkeepNeeded=_upkeepNeeded();
+    }
+
+    function _upkeepNeeded() internal view returns(bool) {
+        if ((block.timestamp - lastTimeStamp) < interval) {
+            // need more time
+            return false;
+        } else if (paused()) {
+            // contract is paused
+            return false;
+        } else if (RAFFLE.pricePool() == 0) {
+            // no price pool
+            return false;
+        }
+        return true;
     }
 
     function performUpkeep(bytes calldata) external override {
-        require(!paused(), "PAUSED");
-        if ((block.timestamp - lastTimeStamp) > interval) {
-            lastTimeStamp = block.timestamp;
-            // TODO call raffle
-            RAFFLE.startRaffle();
-        }
+        require(_upkeepNeeded(), "NO_UPKEEPNEED");
+        lastTimeStamp = block.timestamp;
+        RAFFLE.startRaffle();
     }
 
     // === Admin Functions ===

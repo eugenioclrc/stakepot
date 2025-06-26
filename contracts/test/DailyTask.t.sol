@@ -2,13 +2,24 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import {IRaffle, DailyTask } from "src/DailyTask.sol";
+import {IRaffle, DailyTask} from "src/DailyTask.sol";
 
 contract MockRaffle is IRaffle {
     bool public wasCalled;
 
+    // starts with a price pool
+    uint256 _pricePool = 10;
+
     function startRaffle() external override {
         wasCalled = true;
+    }
+
+    function pricePool() external view returns(uint256) {
+        return _pricePool;
+    }
+
+    function setPricePool(uint256 price) external {
+        _pricePool = price;
     }
 }
 
@@ -40,6 +51,20 @@ contract DailyTaskTest is Test {
         vm.warp(block.timestamp + 1 days + 1);
         (bool upkeepNeeded,) = task.checkUpkeep("");
         assertTrue(upkeepNeeded);
+
+        task.pause();
+        (upkeepNeeded,) = task.checkUpkeep("");
+        assertFalse(upkeepNeeded);
+
+        task.unpause();
+        (upkeepNeeded,) = task.checkUpkeep("");
+        assertTrue(upkeepNeeded);
+
+        raffle.setPricePool(0);
+        (upkeepNeeded,) = task.checkUpkeep("");
+        assertFalse(upkeepNeeded);
+        
+
     }
 
     function testPerformUpkeepCallsRaffleWhenNotPaused() public {
@@ -53,7 +78,7 @@ contract DailyTaskTest is Test {
         task.pause();
         vm.warp(block.timestamp + 2 days);
 
-        vm.expectRevert("PAUSED");
+        vm.expectRevert("NO_UPKEEPNEED");
         task.performUpkeep("");
     }
 
@@ -64,7 +89,6 @@ contract DailyTaskTest is Test {
         task.unpause();
         assertEq(task.paused(), false);
     }
-
 
     function testOnlyOwnerCanPauseUnpauseAndSetInterval() public {
         vm.prank(stranger);
@@ -86,6 +110,7 @@ contract DailyTaskTest is Test {
     }
 
     function testPerformUpkeepBeforeIntervalDoesNothing() public {
+        vm.expectRevert("NO_UPKEEPNEED");
         task.performUpkeep("");
         assertFalse(raffle.wasCalled());
     }
@@ -99,7 +124,7 @@ contract DailyTaskTest is Test {
         raffle = new MockRaffle();
         vm.warp(block.timestamp + 1 days);
         task.performUpkeep(""); // Debe volver a llamarse porque pasó otro día
-        // Pero como usamos otro MockRaffle, el flag `wasCalled` está en el contrato anterior
-        // Este caso ilustra que se puede repetir upkeep si pasa suficiente tiempo
+            // Pero como usamos otro MockRaffle, el flag `wasCalled` está en el contrato anterior
+            // Este caso ilustra que se puede repetir upkeep si pasa suficiente tiempo
     }
 }

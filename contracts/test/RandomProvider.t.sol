@@ -6,8 +6,10 @@ import "src/RandomProvider.sol";
 import "src/mocks/MockVRFCoordinator.sol";
 
 contract MockRaffle {
+    uint256 public raffleCounterId;
     function callRequest(RandomProvider requester) external {
         requester.requestRandomNumber();
+        raffleCounterId++;
     }
 }
 
@@ -67,7 +69,7 @@ contract RandomProviderTest is Test {
         uint256[] memory randomWords = new uint256[](1);
         randomWords[0] = 777;
         MockRandomProvider(address(requester)).testFulfillRandomWords(0, randomWords);
-        assertEq(requester.lastRandom(), 777);
+        assertEq(uint256(requester.randomValue(0)), 777);
     }
 
     function testSetCallbackGasLimit() public {
@@ -96,7 +98,7 @@ contract RandomProviderTest is Test {
         requester.setRaffle(address(0xDEAD));
 
         vm.prank(notOwner);
-        vm.expectRevert(Unauthorized.selector);
+         vm.expectRevert(Unauthorized.selector);
         requester.setCallbackGasLimit(9999);
     }
 }

@@ -14,9 +14,10 @@ contract RandomProvider is VRFConsumerBaseV2, Ownable {
     uint32 public callbackGasLimit = 100_000;
     uint16 public requestConfirmations = 3;
     uint32 public numWords = 1;
+    
+    mapping(uint256 raffleId => bytes32 random) public randomValue;
 
     uint256 public lastRequestId;
-    uint256 public lastRandom;
 
     IRaffle public raffle;
 
@@ -37,7 +38,7 @@ contract RandomProvider is VRFConsumerBaseV2, Ownable {
     }
 
     function fulfillRandomWords(uint256, /* requestId */ uint256[] memory randomWords) internal override {
-        lastRandom = randomWords[0];
+        randomValue[uint256(raffle.raffleCounterId())] = bytes32(randomWords[0]);
     }
 
     function setCallbackGasLimit(uint32 _callbackGasLimit) external onlyOwner {
