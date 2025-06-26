@@ -2,15 +2,15 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import "src/mocks/MockStackedAvax.sol";
+import "src/mocks/MockStakedAvax.sol";
 
-contract MockStackedAvaxTest is Test {
-    MockStackedAvax token;
+contract MockStakedAvaxTest is Test {
+    MockStakedAvax token;
     address user1;
     address user2;
 
     function setUp() public {
-        token = new MockStackedAvax();
+        token = new MockStakedAvax();
         user1 = address(0x1);
         user2 = address(0x2);
     }

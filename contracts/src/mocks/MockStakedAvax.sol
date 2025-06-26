@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {ERC20} from "solady/src/tokens/ERC20.sol";
 //import {IStakedAvax} from "../interfaces/IStakedAvax.sol";
 
-contract MockStackedAvax is ERC20 {
+contract MockStakedAvax is ERC20 {
     uint256 private _totalAvax;
     uint256 public immutable DEPLOYED_AT;
 
