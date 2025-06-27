@@ -5,8 +5,8 @@ import {Ownable} from "solady/src/auth/Ownable.sol";
 import {IStakedAvax} from "./interfaces/IStakedAvax.sol";
 
 contract Vault is Ownable {
-    uint256 private totalBalance; // in avax
-    IStakedAvax private sAVAX;
+    uint256 public totalBalance; // in avax
+    IStakedAvax public sAVAX;
     address public raffle;
 
     constructor(address _sAVAX) {

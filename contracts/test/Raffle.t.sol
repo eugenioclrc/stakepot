@@ -64,9 +64,21 @@ contract RaffleTest is Test {
         vm.prank(bob);
         raffle.buyTickets{value: 1 ether}();
 
+        console.log("totalBalance", mockSAVAX.totalAvax());
         assertEq(raffle.pricePool(), 0 ether);
-        assertEq(mockSAVAX.balanceOf(address(raffle.VAULT())), 10 ether);
-        assertEq(mockSAVAX._totalAvax(), 10 ether);
+
+        console.log("totalBalance", mockSAVAX.getPooledAvaxByShares(10 ether));
+
+        assertEq(raffle.ticketCounterId(), 10);
+        assertEq(raffle.pricePool(), 0 ether);
+        vm.warp(block.timestamp + 1 days);
+        console.log("totalBalance", mockSAVAX.getPooledAvaxByShares(10 ether));
+
+        console.log("VAULT");
+        console.log("totalBalance savax", mockSAVAX.balanceOf(address(vault)));
+        console.log("totalbalance in avax", mockSAVAX.getPooledAvaxByShares(mockSAVAX.balanceOf(address(vault))));
+        console.log("totalBalance ", vault.totalBalance());
+
+        assertGt(raffle.pricePool(), 0 ether);
     }
-        
 }

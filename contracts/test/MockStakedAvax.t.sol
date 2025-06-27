@@ -31,7 +31,7 @@ contract MockStakedAvaxTest is Test {
         assertEq(token.balanceOf(user1), 5 ether);
         assertEq(token.totalSupply(), 15 ether);
         // totalAvax no cambia en `submit`
-        assertApproxEqAbs(token.totalAvax(), 10 ether, 1);
+        assertEq(token.totalAvax(), 15 ether);
     }
 
     function testAirdropOnce() public {
@@ -77,8 +77,16 @@ contract MockStakedAvaxTest is Test {
     }
 
     function testTotalAvaxIncreasesOverTime() public {
+        uint256 baseAvaxShares = token.getPooledAvaxByShares(1 ether);
+        uint256 baseSharesAvax = token.getSharesByPooledAvax(1 ether);
         uint256 base = token.totalAvax();
         vm.warp(block.timestamp + 10 days);
+
+        uint256 afterAvaxShares = token.getPooledAvaxByShares(1 ether);
+        uint256 afterSharesAvax = token.getSharesByPooledAvax(1 ether);
+        assertGt(afterAvaxShares, baseAvaxShares);
+        assertLt(baseSharesAvax, afterSharesAvax);
+
         uint256 increased = token.totalAvax();
         assertGt(increased, base);
         uint256 expected = base + (base * 10 / 100); // ~1% per day

@@ -133,4 +133,25 @@ contract VaultTest is Test {
         vm.expectRevert("NO_ZERO_AMOUNT");
         vault.withdrawStuck(address(mockSAVAX), 0);
     }
+
+    // test price pool
+    function testPricePool() public {
+        deal(address(mockSAVAX), address(raffle), 10 ether);
+        vm.prank(raffle);
+        vault.depositSAVAX(10 ether);
+
+        assertEq(vault.totalPrice(), 0);
+        vm.warp(block.timestamp + 10 days);
+        assertEq(vault.totalPrice(), 1 ether);
+    }
+
+    function testPriceRawPool() public {
+        deal(raffle, 10 ether);
+        vm.prank(raffle);
+        vault.deposit{value: 10 ether}();
+
+        assertEq(vault.totalPrice(), 0);
+        vm.warp(block.timestamp + 1 days);
+        assertEq(vault.totalPrice(), 0.1 ether);
+    }
 }

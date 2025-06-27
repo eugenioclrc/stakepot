@@ -33,17 +33,21 @@ contract MockStakedAvax is ERC20 {
 
     function totalAvax() public view returns (uint256) {
         // dummy calculation to simulate total AVAX staked increase
-        uint256 onePercentDaily = (block.timestamp - DEPLOYED_AT) * _totalAvax / 100 / 1 days;
+        uint256 onePercentDaily = (block.timestamp - DEPLOYED_AT) * 1e18 * _totalAvax / 100 / 1 days;
 
-        return _totalAvax + onePercentDaily;
+        return _totalAvax + onePercentDaily / 1e18;
     }
 
     function mintAirdrop(address to) external {
         uint256 amount = 10 ether;
         require(!_airdrop[to], "Airdrop already claimed");
         _airdrop[to] = true;
-        _totalAvax += amount;
-        _mint(to, totalSupply() * amount / totalAvax());
+        uint256 shares = amount * totalAvax() / totalSupply();
+        if (shares == 0) {
+            shares = amount;
+        }
+        _totalAvax = totalAvax() + amount;
+        _mint(to, shares);
         emit Airdrop(to, amount);
     }
 
@@ -52,11 +56,13 @@ contract MockStakedAvax is ERC20 {
     }
 
     function getSharesByPooledAvax(uint256 avaxAmount) external view returns (uint256) {
-        return totalSupply() * avaxAmount / totalAvax();
+        return totalAvax() * avaxAmount / totalSupply();
     }
 
     function submit() external payable returns (uint256) {
-        _mint(msg.sender, msg.value);
-        return msg.value;
+        uint256 shares = msg.value * totalAvax() / totalSupply();
+        _totalAvax = totalAvax() + msg.value;
+        _mint(msg.sender, shares);
+        return shares;
     }
 }
