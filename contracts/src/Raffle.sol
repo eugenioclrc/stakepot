@@ -136,6 +136,39 @@ contract Raffle is Ownable {
         VAULT.withdrawToWinner(foundWinner);
     }
 
+    function cleanup(uint256 amountToProcess) external {
+        if (_raffleState == RAFFLE_STARTED) {
+            require(msg.sender == owner(), "Only owner can cleanup if raffle started");
+        }
+
+        if (amountToProcess == 0) {
+            amountToProcess = burnedTickets.length;
+        } else {
+            amountToProcess = amountToProcess > burnedTickets.length ? burnedTickets.length : amountToProcess;
+        }
+
+        for (uint256 i = 0; i < amountToProcess; i++) {
+            uint128 burnId = burnedTickets[burnedTickets.length - 1];
+            burnedTickets.pop();
+            Ticket storage ticket = tickets[burnId];
+            if (ticket.burned) {
+                _remove(burnId);
+                delete tickets[burnId];
+            }
+        }
+    }
+
+    function _remove(uint128 id) internal {
+        uint128[] storage _validTickets = validTickets; // copy to memory for gas efficiency
+        for (uint256 i = 0; i < _validTickets.length; i++) {
+            if (_validTickets[i] == id) {
+                _validTickets[i] = _validTickets[_validTickets.length - 1];
+                _validTickets.pop();
+                return;
+            }
+        }
+    }
+
     function pricePool() external view virtual returns (uint256) {
         return VAULT.totalPrice();
     }

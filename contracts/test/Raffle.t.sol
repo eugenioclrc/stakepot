@@ -104,4 +104,121 @@ contract RaffleTest is Test {
 
         assertGt(mockSAVAX.balanceOf(alice), 0, "alice should have some savax after winning");
     }
+
+    // ───────────────────────────────────────────── added: tests for withdraw ─┐
+    function testWithdraw_RefundsAndBurns() public {
+        // Alice buys 3 tickets (IDs 0,1,2)
+        vm.prank(alice);
+        raffle.buyTickets{value: 3 ether}();
+
+        // she decides to refund the first two
+        uint256[] memory ids = new uint256[](2);
+        ids[0] = 0;
+        ids[1] = 1;
+
+        vm.prank(alice);
+        raffle.withdraw(ids);
+
+        // both tickets are now burned
+        (,, bool burned0,) = raffle.tickets(0);
+        (,, bool burned1,) = raffle.tickets(1);
+        assertTrue(burned0);
+        assertTrue(burned1);
+
+        // and Alice received 2 SAVAX (1 token per ticket)
+        assertEq(mockSAVAX.balanceOf(alice), 2 ether);
+
+        // withdrawing again must revert — already burned
+        vm.prank(alice);
+        vm.expectRevert("Ticket already burned");
+        raffle.withdraw(ids);
+    }
+
+    function testWithdraw_RevertsIfNotOwnerOrStarted() public {
+        // Alice buys 1, Bob buys 1
+        vm.prank(alice);
+        raffle.buyTickets{value: 1 ether}(); // id 0
+        vm.prank(bob);
+        raffle.buyTickets{value: 1 ether}(); // id 1
+
+        // Bob tries to withdraw Alice’s ticket
+        uint256[] memory wrong = new uint256[](1);
+        wrong[0] = 0;
+        vm.prank(bob);
+        vm.expectRevert("You are not the owner of this ticket");
+        raffle.withdraw(wrong);
+
+        // start raffle
+        vm.prank(address(dailyTask));
+        raffle.startRaffle();
+
+        // now even Alice can’t withdraw
+        vm.prank(alice);
+        vm.expectRevert("Raffle started, cant withdraw");
+        raffle.withdraw(wrong);
+    }
+
+    // ───────────────────────────────────────────────────────────── helpers ─┐
+    /// @dev storage slot of `burnedTickets` dynamic-array length (see layout)
+    uint256 constant _BURNED_TICKETS_SLOT = 4;
+    /// @dev storage slot of `validTickets` dynamic-array length
+    uint256 constant _VALID_TICKETS_SLOT = 3;
+
+    function _arrayLength(uint256 slot) internal view returns (uint256 len) {
+        len = uint256(vm.load(address(raffle), bytes32(slot)));
+    }
+
+    /// @dev forcibly push an element to the `burnedTickets` array (test-only).
+    function _cheatPushBurned(uint256 ticketId) internal {
+        uint256 len = _arrayLength(_BURNED_TICKETS_SLOT);
+        // increase length
+        vm.store(address(raffle), bytes32(_BURNED_TICKETS_SLOT), bytes32(len + 1));
+        // write element value
+        bytes32 eltSlot = bytes32(uint256(keccak256(abi.encode(uint256(_BURNED_TICKETS_SLOT)))) + uint256(len));
+        vm.store(address(raffle), eltSlot, bytes32(ticketId));
+    }
+
+    // ───────────────────────────────────────────── added: tests for cleanup ─┐
+    function testCleanup_RemovesBurnedTickets() public {
+        // 1) Alice buys 3 tickets (0,1,2) and burns #0 via withdraw
+        vm.prank(alice);
+        raffle.buyTickets{value: 3 ether}();
+
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = 0;
+        vm.prank(alice);
+        raffle.withdraw(ids);
+
+        // 2) simulate the ticket being queued for cleanup
+        _cheatPushBurned(0);
+
+        uint256 lenBefore = _arrayLength(_VALID_TICKETS_SLOT);
+        assertEq(lenBefore, 3, "setup sanity");
+
+        // 3) anyone may call when raffle not started
+        raffle.cleanup(0); // process all queued
+
+        uint256 lenAfter = _arrayLength(_VALID_TICKETS_SLOT);
+        assertEq(lenAfter, 2, "burned ticket removed from validTickets");
+
+        // ticket mapping should be cleared
+        (uint128 id,, bool burned, address owner) = raffle.tickets(0);
+        assertEq(id, 0); // becomes default-value 0
+        assertFalse(burned); // struct wiped
+        assertEq(owner, address(0));
+    }
+
+    function testCleanup_OnlyOwnerWhenRaffleStarted() public {
+        // Set the raffle to STARTED state
+        vm.prank(address(dailyTask));
+        raffle.startRaffle();
+
+        // Bob (not owner) tries first
+        vm.prank(bob);
+        vm.expectRevert("Only owner can cleanup if raffle started");
+        raffle.cleanup(0);
+
+        // Owner is allowed
+        raffle.cleanup(0);
+    }
 }
