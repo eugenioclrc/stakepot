@@ -66,14 +66,13 @@ contract RaffleTest is Test {
 
         assertEq(raffle.pricePool(), 0 ether);
 
-
         assertEq(raffle.ticketCounterId(), 10);
         assertEq(raffle.pricePool(), 0 ether);
         vm.warp(block.timestamp + 1 days);
 
         assertGt(raffle.pricePool(), 0 ether);
 
-        (bool upkeepNeeded, ) = dailyTask.checkUpkeep("");
+        (bool upkeepNeeded,) = dailyTask.checkUpkeep("");
         assertTrue(upkeepNeeded);
         dailyTask.performUpkeep("");
 
@@ -86,22 +85,23 @@ contract RaffleTest is Test {
         words[0] = uint256(keccak256(abi.encodePacked("random")));
         MockRandomProvider(address(randomProvider)).testFulfillRandomWords(1, words);
 
+        // with current random the winner is alice (ticket 2)
+        assertEq(mockSAVAX.balanceOf(alice), 0);
 
-        // with current random the winner is alice (ticket 7)
-        assertEq(mockSAVAX.balanceOf(bob), 0);
+        // here no ticket is valid yet, so cant pick a winner
+        raffle.pickWinner{gas: 1000000}();
+        // but after 1 seconde the ticket are valid
         vm.warp(block.timestamp + 1);
         raffle.pickWinner{gas: 1000000}();
 
         assertEq(raffle.ticketCounterId(), 10);
 
- 
-        (uint128 id, uint120 validAfter, bool burned,address owner) = raffle.tickets(7);
-        assertEq(id, 7);
-        assertEq(owner, bob);
+        (uint128 id, uint120 validAfter, bool burned, address owner) = raffle.tickets(2);
+        assertEq(id, 2);
+        assertEq(owner, alice);
         assertEq(validAfter, 86401);
         assertFalse(burned);
 
-        assertGt(mockSAVAX.balanceOf(bob), 0, "bob should have some savax after winning");
+        assertGt(mockSAVAX.balanceOf(alice), 0, "alice should have some savax after winning");
     }
-
 }

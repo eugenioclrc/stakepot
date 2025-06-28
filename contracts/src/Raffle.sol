@@ -10,6 +10,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "forge-std/Test.sol";
 
 contract Raffle is Ownable {
+    event WinnerPicked(uint256 raffleCounterId, Ticket ticket);
+
     struct Ticket {
         uint128 id;
         uint120 validAfter;
@@ -97,7 +99,7 @@ contract Raffle is Ownable {
     }
 
     function pickWinner() external {
-        require(gasleft() >= 20000, "use min of 20k gas");
+        require(gasleft() >= 60000, "use min of 60k gas");
         require(_raffleState == RAFFLE_STARTED, "Raffle not started");
         bytes32 prng = latestPRGN == bytes32(0) ? randomProvider.randomValue(raffleCounterId) : latestPRGN;
         require(uint256(prng) > 0, "RND_NOT_SET");
@@ -115,10 +117,11 @@ contract Raffle is Ownable {
                 raffleTicketsWinner[raffleCounterId] = ticketId;
                 foundWinner = ticket.owner;
                 latestPRGN = bytes32(0);
+                emit WinnerPicked(raffleCounterId, ticket);
             } else {
                 prng = keccak256(abi.encodePacked(prng, winner));
             }
-            if(gasleft() < 10000) {
+            if (gasleft() < 25000) {
                 latestPRGN = prng;
                 // early exit, needs to re-run the function with the latest PRNG
                 return;
