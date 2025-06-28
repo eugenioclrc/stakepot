@@ -7,6 +7,8 @@ import {RandomProvider} from "./RandomProvider.sol";
 import {Vault} from "./VaultBenji.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import "forge-std/Test.sol";
+
 contract Raffle is Ownable {
     struct Ticket {
         uint128 id;
@@ -21,6 +23,8 @@ contract Raffle is Ownable {
     Vault public immutable VAULT;
 
     uint256 public ticketCounterId;
+    // use to continue the raffle if the gas is not enough
+    bytes32 public latestPRGN;
 
     mapping(uint256 => Ticket) public tickets;
     uint128[] public validTickets;
@@ -68,6 +72,7 @@ contract Raffle is Ownable {
     }
 
     function withdraw(uint256[] memory ticketsId) external {
+        require(_raffleState == RAFFLE_NOT_STARTED, "Raffle started, cant withdraw");
         require(ticketsId.length > 0, "No tickets to withdraw");
 
         for (uint256 i = 0; i < ticketsId.length; i++) {
@@ -91,11 +96,11 @@ contract Raffle is Ownable {
         randomProvider.requestRandomNumber();
     }
 
-    // @TODO Need some tweaks here to avoid any DOS / out of gas issues, for now its ok
     function pickWinner() external {
+        require(gasleft() >= 20000, "use min of 20k gas");
         require(_raffleState == RAFFLE_STARTED, "Raffle not started");
-        bytes32 prng = randomProvider.randomValue(raffleCounterId);
-        require(prng != bytes32(0x00), "RND_NOT_SET");
+        bytes32 prng = latestPRGN == bytes32(0) ? randomProvider.randomValue(raffleCounterId) : latestPRGN;
+        require(uint256(prng) > 0, "RND_NOT_SET");
 
         uint128[] memory _validTickets = validTickets; // copy to memory for gas efficiency
         uint256 lenValidTickets = _validTickets.length;
@@ -109,8 +114,14 @@ contract Raffle is Ownable {
             if (ticket.validAfter < block.timestamp && !ticket.burned) {
                 raffleTicketsWinner[raffleCounterId] = ticketId;
                 foundWinner = ticket.owner;
+                latestPRGN = bytes32(0);
             } else {
                 prng = keccak256(abi.encodePacked(prng, winner));
+            }
+            if(gasleft() < 10000) {
+                latestPRGN = prng;
+                // early exit, needs to re-run the function with the latest PRNG
+                return;
             }
         }
 

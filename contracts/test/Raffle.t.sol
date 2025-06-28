@@ -64,21 +64,44 @@ contract RaffleTest is Test {
         vm.prank(bob);
         raffle.buyTickets{value: 1 ether}();
 
-        console.log("totalBalance", mockSAVAX.totalAvax());
         assertEq(raffle.pricePool(), 0 ether);
 
-        console.log("totalBalance", mockSAVAX.getPooledAvaxByShares(10 ether));
 
         assertEq(raffle.ticketCounterId(), 10);
         assertEq(raffle.pricePool(), 0 ether);
         vm.warp(block.timestamp + 1 days);
-        console.log("totalBalance", mockSAVAX.getPooledAvaxByShares(10 ether));
-
-        console.log("VAULT");
-        console.log("totalBalance savax", mockSAVAX.balanceOf(address(vault)));
-        console.log("totalbalance in avax", mockSAVAX.getPooledAvaxByShares(mockSAVAX.balanceOf(address(vault))));
-        console.log("totalBalance ", vault.totalBalance());
 
         assertGt(raffle.pricePool(), 0 ether);
+
+        (bool upkeepNeeded, ) = dailyTask.checkUpkeep("");
+        assertTrue(upkeepNeeded);
+        dailyTask.performUpkeep("");
+
+        (upkeepNeeded,) = dailyTask.checkUpkeep("");
+        assertFalse(upkeepNeeded);
+
+        assertEq(raffle.pricePool(), 0.1 ether);
+
+        uint256[] memory words = new uint256[](1);
+        words[0] = uint256(keccak256(abi.encodePacked("random")));
+        MockRandomProvider(address(randomProvider)).testFulfillRandomWords(1, words);
+
+
+        // with current random the winner is alice (ticket 7)
+        assertEq(mockSAVAX.balanceOf(bob), 0);
+        vm.warp(block.timestamp + 1);
+        raffle.pickWinner{gas: 1000000}();
+
+        assertEq(raffle.ticketCounterId(), 10);
+
+ 
+        (uint128 id, uint120 validAfter, bool burned,address owner) = raffle.tickets(7);
+        assertEq(id, 7);
+        assertEq(owner, bob);
+        assertEq(validAfter, 86401);
+        assertFalse(burned);
+
+        assertGt(mockSAVAX.balanceOf(bob), 0, "bob should have some savax after winning");
     }
+
 }
