@@ -22,10 +22,16 @@ This project leverages **Chainlink VRF (Verifiable Random Function)** and **Chai
 - **Tamper-Proof**: No one can manipulate the raffle results
 - **Decentralized**: Randomness is provided by a decentralized network of nodes
 
+<img width="1300" alt="image" src="https://github.com/user-attachments/assets/29126ea0-8eea-46ee-ba9b-c5ad807c5559" />
+
+
 ### Chainlink Automation
 - **Daily Raffle Automation**: Automatically starts raffles every 24 hours
 - **Winner Selection Automation**: Automatically picks winners when conditions are met
 - **Gas-Efficient**: Only executes when needed, saving on gas costs
+
+<img width="1381" alt="image" src="https://github.com/user-attachments/assets/1148d79d-5f73-4def-873f-bd5daade6aea" />
+
 
 ## 🏗️ Architecture
 
