@@ -1,3 +1,12 @@
+<script lang="ts">
+  import { buyTickets } from '$lib/contracts';
+
+  let amountTickets = $state(0);
+
+  async function handleStake() {
+    await buyTickets(amountTickets);
+  }
+</script>
 
   <div class="min-h-screen bg-base-200 px-4 py-10 flex flex-col lg:flex-row gap-8 items-center justify-center">
 
@@ -9,15 +18,15 @@
         
         <label class="form-control w-full">
           <div class="label">
-            <span class="label-text">Amount to stake (AVAX)</span>
+            <span class="label-text">Amount of tickets to buy</span>
           </div>
-          <input type="number" placeholder="e.g. 10" class="input input-bordered input-primary w-full" />
+          <input type="number" placeholder="e.g. 10" class="input input-bordered input-primary w-full" bind:value={amountTickets} />
         </label>
   
-        <button class="btn btn-primary btn-block">Confirm Stake</button>
+        <button class="btn btn-primary btn-block" on:click={handleStake}>Confirm Stake</button>
   
         <div class="text-sm text-center text-base-content pt-4">
-          🎟️ 1 AVAX = 1 ticket · 🏆 Daily draw · 💸 No losses
+          🎟️ 0.0001 AVAX = 1 ticket · 🏆 Daily draw · 💸 No losses
         </div>
       </div>
     </div>

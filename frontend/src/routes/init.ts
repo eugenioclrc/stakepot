@@ -61,13 +61,3 @@ featuredWalletIds: [
 	modal.set(_modal);
 	config.set(wagmiAdapter.wagmiConfig);
 }
-
-export const chainId = derived(modal, ($modal) => {
-	try {
-		const chainId = $modal.getChainId();
-		return chainId ? BigInt(chainId) : 0n;
-	} catch (err) {
-		console.error(err);
-		return 0n;
-	}
-});
