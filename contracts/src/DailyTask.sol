@@ -3,10 +3,10 @@ pragma solidity ^0.8.20;
 
 import {AutomationCompatibleInterface} from "@chainlink/contracts/src/v0.8/automation/AutomationCompatible.sol";
 import {Ownable} from "solady/src/auth/Ownable.sol";
-import {Raffle} from "./Raffle.sol";
+import {IRaffle} from "./interfaces/IRaffle.sol";
 
 contract DailyTask is AutomationCompatibleInterface, Ownable {
-    Raffle public RAFFLE;
+    IRaffle public RAFFLE;
     uint256 public lastTimeStamp;
     uint256 public interval = 1 days;
 
@@ -15,7 +15,7 @@ contract DailyTask is AutomationCompatibleInterface, Ownable {
     constructor(address _raffle) {
         lastTimeStamp = block.timestamp;
         _initializeOwner(msg.sender);
-        RAFFLE = Raffle(_raffle);
+        RAFFLE = IRaffle(_raffle);
     }
 
     function paused() public view returns (bool) {
@@ -27,6 +27,10 @@ contract DailyTask is AutomationCompatibleInterface, Ownable {
     }
 
     function _upkeepNeeded() internal view returns (bool) {
+        if(address(RAFFLE) == address(0)) {
+            return false;
+        }
+
         if ((block.timestamp - lastTimeStamp) < interval) {
             // need more time
             return false;
@@ -52,7 +56,7 @@ contract DailyTask is AutomationCompatibleInterface, Ownable {
     }
 
     function setRaffle(address _raffle) external onlyOwner {
-        RAFFLE = Raffle(_raffle);
+        RAFFLE = IRaffle(_raffle);
     }
 
     function pause() external onlyOwner {

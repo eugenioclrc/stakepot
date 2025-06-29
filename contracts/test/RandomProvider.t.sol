@@ -7,20 +7,24 @@ import "src/mocks/MockVRFCoordinator.sol";
 
 contract MockRaffle {
     uint256 public raffleCounterId;
-
     function callRequest(RandomProvider requester) external {
-        requester.requestRandomNumber();
+        requester.requestRandomNumber(false);
         raffleCounterId++;
     }
 }
 
 contract MockRandomProvider is RandomProvider {
     // Test-only function to simulate VRF coordinator callback
-    constructor(address _vrfCoordinator, bytes32 _keyHash, uint64 _subId, address _raffle)
-        RandomProvider(_vrfCoordinator, _keyHash, _subId, _raffle)
+    address _vrfCoordinator;
+    uint256 subscriptionId;
+    bytes32 _keyHash;
+    address _raffle;
+
+    constructor(address _vrfCoordinator_, uint256 _subscriptionId, bytes32 _keyHash_, address _raffle_)
+        RandomProvider(_vrfCoordinator_, _subscriptionId, _keyHash_,  _raffle_)
     {}
 
-    function testFulfillRandomWords(uint256 requestId, uint256[] memory randomWords) external {
+    function testFulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) external {
         // Only allow this in test environment
         require(block.chainid == 31337 || block.chainid == 1337, "Test only");
         fulfillRandomWords(requestId, randomWords);
@@ -34,24 +38,24 @@ contract RandomProviderTest is Test {
 
     address owner = address(this);
     bytes32 keyHash = keccak256("key");
-    uint64 subId = 1;
+    uint256 subId = 1;
 
     function setUp() public {
         coordinator = new MockVRFCoordinator();
         raffle = new MockRaffle();
         requester =
-            RandomProvider(address(new MockRandomProvider(address(coordinator), keyHash, subId, address(raffle))));
+            RandomProvider(address(new MockRandomProvider(address(coordinator), subId, keyHash, address(raffle))));
     }
 
     function testInitialSetup() public {
-        assertEq(requester.subscriptionId(), subId);
+        assertEq(requester.s_subscriptionId(), subId);
         assertEq(requester.keyHash(), keyHash);
         assertEq(address(requester.raffle()), address(raffle));
     }
 
     function testOnlyRaffleCanRequest() public {
         vm.expectRevert("ONLY_RAFFLE");
-        requester.requestRandomNumber();
+        requester.requestRandomNumber(false);
     }
 
     function testRequestRandomNumberFromRaffle() public {
@@ -99,7 +103,7 @@ contract RandomProviderTest is Test {
         requester.setRaffle(address(0xDEAD));
 
         vm.prank(notOwner);
-        vm.expectRevert(Unauthorized.selector);
+         vm.expectRevert(Unauthorized.selector);
         requester.setCallbackGasLimit(9999);
     }
 }

@@ -7,7 +7,6 @@ import {RandomProvider} from "./RandomProvider.sol";
 import {Vault} from "./VaultBenji.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "forge-std/Test.sol";
 
 contract Raffle is Ownable {
     event WinnerPicked(uint256 raffleCounterId, Ticket ticket);
@@ -33,12 +32,12 @@ contract Raffle is Ownable {
     uint128[] public burnedTickets;
 
     uint128 public latestRaffleTime;
-    uint128 public raffleCounterId;
+    uint128 private _raffleCounterId;
     mapping(uint256 => uint256) public raffleTicketsWinner;
 
     address public keeper;
     RandomProvider public randomProvider;
-    uint8 private _raffleState = 1; // 1: open, 2: closed
+    uint8 public raffleState = 1; // 1: open, 2: closed
 
     constructor(uint256 _ticketPrice, address _keeper, address _randomProvider, address _vault, address _SAVAX) {
         TICKET_PRICE = _ticketPrice;
@@ -74,7 +73,7 @@ contract Raffle is Ownable {
     }
 
     function withdraw(uint256[] memory ticketsId) external {
-        require(_raffleState == RAFFLE_NOT_STARTED, "Raffle started, cant withdraw");
+        require(raffleState == RAFFLE_NOT_STARTED, "Raffle started, cant withdraw");
         require(ticketsId.length > 0, "No tickets to withdraw");
 
         for (uint256 i = 0; i < ticketsId.length; i++) {
@@ -92,16 +91,16 @@ contract Raffle is Ownable {
     }
 
     function startRaffle() external onlyKeeper {
-        require(_raffleState == RAFFLE_NOT_STARTED, "Raffle already started");
-        _raffleState = 2; // close raffle
+        require(raffleState == RAFFLE_NOT_STARTED, "Raffle already started");
+        raffleState = 2; // close raffle
         latestRaffleTime = uint128(block.timestamp);
-        randomProvider.requestRandomNumber();
+        randomProvider.requestRandomNumber(false);
     }
 
     function pickWinner() external {
         require(gasleft() >= 60000, "use min of 60k gas");
-        require(_raffleState == RAFFLE_STARTED, "Raffle not started");
-        bytes32 prng = latestPRGN == bytes32(0) ? randomProvider.randomValue(raffleCounterId) : latestPRGN;
+        require(raffleState == RAFFLE_STARTED, "Raffle not started");
+        bytes32 prng = latestPRGN == bytes32(0) ? randomProvider.randomValue(uint256(_raffleCounterId)) : latestPRGN;
         require(uint256(prng) > 0, "RND_NOT_SET");
 
         uint128[] memory _validTickets = validTickets; // copy to memory for gas efficiency
@@ -114,10 +113,10 @@ contract Raffle is Ownable {
             uint256 ticketId = _validTickets[winner];
             Ticket storage ticket = tickets[ticketId];
             if (ticket.validAfter < block.timestamp && !ticket.burned) {
-                raffleTicketsWinner[raffleCounterId] = ticketId;
+                raffleTicketsWinner[uint256(_raffleCounterId)] = ticketId;
                 foundWinner = ticket.owner;
                 latestPRGN = bytes32(0);
-                emit WinnerPicked(raffleCounterId, ticket);
+                emit WinnerPicked(uint256(_raffleCounterId), ticket);
             } else {
                 prng = keccak256(abi.encodePacked(prng, winner));
             }
@@ -128,16 +127,16 @@ contract Raffle is Ownable {
             }
         }
 
-        raffleCounterId++;
+        _raffleCounterId++;
         latestRaffleTime = uint128(block.timestamp);
         // reset raffle state
-        _raffleState = RAFFLE_NOT_STARTED;
+        raffleState = RAFFLE_NOT_STARTED;
 
         VAULT.withdrawToWinner(foundWinner);
     }
 
     function cleanup(uint256 amountToProcess) external {
-        if (_raffleState == RAFFLE_STARTED) {
+        if (raffleState == RAFFLE_STARTED) {
             require(msg.sender == owner(), "Only owner can cleanup if raffle started");
         }
 
@@ -171,6 +170,10 @@ contract Raffle is Ownable {
 
     function pricePool() external view virtual returns (uint256) {
         return VAULT.totalPrice();
+    }
+
+    function raffleCounterId() external view returns (uint256) {
+        return _raffleCounterId;
     }
 
     function setKeeper(address _keeper) external onlyOwner {

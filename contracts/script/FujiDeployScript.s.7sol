@@ -1,0 +1,55 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.13;
+
+import {Script, console} from "forge-std/Script.sol";
+//import {Counter} from "../src/Counter.sol";
+import {MockStakedAvax} from "../src/mocks/MockStakedAvax.sol";
+import {Vault} from "../src/VaultBenji.sol";
+import {DailyTask} from "../src/DailyTask.sol";
+import {Raffle} from "../src/Raffle.sol";
+import {RandomProvider} from "../src/RandomProvider.sol";
+import {DailyPickWinnerTask} from "../src/DailyPickwinner.sol";
+
+contract FujiDeployScript is Script {
+    //Counter public counter;
+
+    function setUp() public {
+        require(block.chainid == 43113, "Not Fuji");
+
+    }
+
+    function run() public returns (address mockStakedAvax, Vault vault, DailyTask dailyTask, Raffle raffle, RandomProvider randomProvider, DailyPickWinnerTask dailyPickWinnerTask) {
+        vm.startBroadcast();
+
+        address FUJI_VRF_COORDINATOR = 0x5C210eF41CD1a72de73bF76eC39637bB0d3d7BEE;
+        uint256 subscriptionId = 24873149349128474353998387474832066410290884988985182883035921642776384575869;
+
+         // The gas lane to use, which specifies the maximum gas price to bump to.
+    // For a list of available gas lanes on each network,
+    // see https://docs.chain.link/vrf/v2-5/supported-networks
+    //300 gwei Key Hash	
+
+        bytes32 keyHash = 0xc799bd1e3bd4d1a41cd4968997a4e03dfd2a3c7c04b695881138580163f42887;
+
+        // deploy mock staked avax
+        MockStakedAvax _mockStakedAvax = new MockStakedAvax();
+        mockStakedAvax = address(_mockStakedAvax);
+
+        vault = new Vault(mockStakedAvax);
+        dailyTask = new DailyTask(address(this));
+        randomProvider = new RandomProvider(FUJI_VRF_COORDINATOR, keyHash, subscriptionId, address(raffle));
+        uint256 ticketPrice = 0.0001 ether; //
+        raffle =
+            new Raffle(ticketPrice, address(dailyTask), address(randomProvider), address(vault), address(mockStakedAvax));
+
+        dailyTask.setRaffle(address(raffle));
+        vault.setRaffle(address(raffle));
+
+        dailyPickWinnerTask = new DailyPickWinnerTask(address(raffle));
+
+
+
+
+        vm.stopBroadcast();
+    }
+}

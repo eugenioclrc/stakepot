@@ -7,15 +7,17 @@ import {MockStakedAvax} from "src/mocks/MockStakedAvax.sol";
 import {Raffle} from "src/Raffle.sol";
 import {RandomProvider} from "src/RandomProvider.sol";
 import {DailyTask} from "src/DailyTask.sol";
-import {MockVRFCoordinator} from "src/mocks/MockVRFCoordinator.sol";
+import {VRFCoordinatorV2_5Mock} from "src/mocks/VRFCoordinatorV2_5Mock.sol";
+
+
 
 contract MockRandomProvider is RandomProvider {
     // Test-only function to simulate VRF coordinator callback
-    constructor(address _vrfCoordinator, bytes32 _keyHash, uint64 _subId, address _raffle)
-        RandomProvider(_vrfCoordinator, _keyHash, _subId, _raffle)
+    constructor(address _vrfCoordinator, uint256 _subscriptionId, bytes32 _keyHash, address _raffle)
+        RandomProvider(_vrfCoordinator, _subscriptionId, _keyHash,_raffle)
     {}
 
-    function testFulfillRandomWords(uint256 requestId, uint256[] memory randomWords) external {
+    function testFulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) external {
         // Only allow this in test environment
         require(block.chainid == 31337 || block.chainid == 1337, "Test only");
         fulfillRandomWords(requestId, randomWords);
@@ -28,20 +30,22 @@ contract RaffleTest is Test {
     MockStakedAvax mockSAVAX;
     RandomProvider randomProvider;
     DailyTask dailyTask;
-    MockVRFCoordinator coordinator;
+    VRFCoordinatorV2_5Mock coordinator;
 
     address alice = makeAddr("alice");
     address bob = makeAddr("bob");
 
     function setUp() public {
-        coordinator = new MockVRFCoordinator();
+        coordinator = new VRFCoordinatorV2_5Mock(100000000000000000, 1000000000, 5466202833173323);
         mockSAVAX = new MockStakedAvax();
         vault = new Vault(address(mockSAVAX));
         dailyTask = new DailyTask(address(this));
         uint256 ticketPrice = 1 ether; // one avax per ticket
         raffle =
             new Raffle(ticketPrice, address(dailyTask), address(randomProvider), address(vault), address(mockSAVAX));
-        randomProvider = new MockRandomProvider(address(coordinator), bytes32(0), 1, address(raffle));
+        randomProvider = new MockRandomProvider(address(coordinator), 1, bytes32(0), address(raffle));
+
+        coordinator.addConsumer(uint256(1),address(randomProvider));
 
         raffle.setRandomProvider(address(randomProvider));
         dailyTask.setRaffle(address(raffle));
